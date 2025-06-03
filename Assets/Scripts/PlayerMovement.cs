@@ -76,12 +76,20 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private Vector2 currentInput;
+
     private void FixedUpdate()
     {
-        Vector2 targetVelocity = new Vector2((moveInput.x + mobileInputX) * moveSpeed,
-                                             (moveInput.y + mobileInputY) * moveSpeed);
-        rb.velocity = targetVelocity;
+        // Satukan input dari joystick dan keyboard
+        currentInput = new Vector2(
+            Mathf.Clamp(moveInput.x + mobileInputX, -1f, 1f),
+            Mathf.Clamp(moveInput.y + mobileInputY, -1f, 1f)
+        );
 
+        // Gerakkan player
+        rb.velocity = currentInput * moveSpeed;
+
+        // Update animasi
         UpdateAnimation();
     }
 
@@ -89,17 +97,20 @@ public class PlayerMovement : MonoBehaviour
     {
         MovementState state;
 
-        float horizontal = moveInput.x != 0 ? moveInput.x : mobileInputX;
-        float vertical = moveInput.y != 0 ? moveInput.y : mobileInputY;
+        float horizontal = currentInput.x;
+        float vertical = currentInput.y;
 
         if (Mathf.Abs(horizontal) > 0.1f || Mathf.Abs(vertical) > 0.1f)
         {
             state = MovementState.walk;
 
+            // ✅ Jika sprite default menghadap kiri, maka:
+            // - flipX true saat ke kanan
+            // - flipX false saat ke kiri
             if (horizontal > 0f)
-                sprite.flipX = false;
-            else if (horizontal < 0f)
                 sprite.flipX = true;
+            else if (horizontal < 0f)
+                sprite.flipX = false;
         }
         else
         {
@@ -108,6 +119,7 @@ public class PlayerMovement : MonoBehaviour
 
         anim.SetInteger("state", (int)state);
     }
+
 
     public void MoveRight(bool isPressed)
     {
@@ -132,8 +144,7 @@ public class PlayerMovement : MonoBehaviour
     // 🔄 Helper untuk ambil PlayerControl dari PlayerController
     private PlayerControl GetPlayerControl()
     {
-        return playerController != null ? typeof(PlayerController)
-            .GetField("playerControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .GetValue(playerController) as PlayerControl : null;
+        return playerController != null ? playerController.playerControl : null;
     }
+
 }

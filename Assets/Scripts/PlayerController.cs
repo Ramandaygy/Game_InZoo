@@ -7,7 +7,8 @@ public class PlayerController : MonoBehaviour
     public bool FacingLeft { get { return facingLeft; } set { facingLeft = value; } }
     //public static PlayerController Instance;
     [SerializeField] private float moveSpeed = 1f;
-    private PlayerControl playerControl;
+    public PlayerControl playerControl { get; private set; }
+
     private Vector2 movement;
     private Rigidbody2D rb;
 
@@ -18,7 +19,9 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        playerControl = new PlayerControl();
+        if (playerControl == null)
+            playerControl = new PlayerControl();
+
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
@@ -26,8 +29,13 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (playerControl == null)
+            playerControl = new PlayerControl();
+
         playerControl.Enable();
     }
+
+
 
     private void Update()
     {
@@ -42,11 +50,13 @@ public class PlayerController : MonoBehaviour
 
     private void PlayerInput()
     {
-        movement = playerControl.Movement.Move.ReadValue<Vector2>();
+        if (playerControl == null) return; // tambahkan baris ini
 
+        movement = playerControl.Movement.Move.ReadValue<Vector2>();
         anim.SetFloat("moveX", movement.x);
         anim.SetFloat("moveY", movement.y);
     }
+
 
     private void Move()
     {
