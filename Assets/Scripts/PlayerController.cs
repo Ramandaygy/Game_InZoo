@@ -1,21 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     public bool FacingLeft { get { return facingLeft; } set { facingLeft = value; } }
-    //public static PlayerController Instance;
+
     [SerializeField] private float moveSpeed = 1f;
     public PlayerControl playerControl { get; private set; }
 
     private Vector2 movement;
     private Rigidbody2D rb;
-
     private Animator anim;
     public SpriteRenderer sprite;
     private bool facingLeft = false;
-
 
     private void Awake()
     {
@@ -29,17 +28,34 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (playerControl == null)
-            playerControl = new PlayerControl();
+        Debug.Log("PlayerController Enabled");
 
-        playerControl.Enable();
+        if (playerControl != null)
+        {
+            Debug.Log("PlayerControl ditemukan");
+
+            playerControl.Movement.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
+            playerControl.Movement.Move.canceled += ctx => movement = Vector2.zero;
+            playerControl.Enable();
+        }
+        else
+        {
+            Debug.LogError("PlayerControl NULL di OnEnable");
+        }
     }
 
-
+    private void OnDisable()
+    {
+        if (playerControl != null)
+        {
+            playerControl.Disable();
+        }
+    }
 
     private void Update()
     {
-        PlayerInput();
+        anim.SetFloat("moveX", movement.x);
+        anim.SetFloat("moveY", movement.y);
     }
 
     private void FixedUpdate()
@@ -48,19 +64,8 @@ public class PlayerController : MonoBehaviour
         Move();
     }
 
-    private void PlayerInput()
-    {
-        if (playerControl == null) return; // tambahkan baris ini
-
-        movement = playerControl.Movement.Move.ReadValue<Vector2>();
-        anim.SetFloat("moveX", movement.x);
-        anim.SetFloat("moveY", movement.y);
-    }
-
-
     private void Move()
     {
-
         rb.MovePosition(rb.position + movement * (moveSpeed * Time.fixedDeltaTime));
     }
 
